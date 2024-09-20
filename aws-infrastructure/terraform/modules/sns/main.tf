@@ -14,6 +14,6 @@ resource "aws_kms_key" "aws_backend_sns_key" {
 }
 
 resource "aws_kms_alias" "backend_kms_alias" {
-  name          = "alias/aws-backend-sns-key"
+  name          = "alias/aws-backend-sns-key-v2"
   target_key_id = aws_kms_key.aws_backend_sns_key.arn
 }
