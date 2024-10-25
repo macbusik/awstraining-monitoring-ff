@@ -25,27 +25,25 @@ class DeviceController implements DeviceIdApi {
     private static final Logger LOGGER = LogManager.getLogger(DeviceController.class);
 
     private final MeasurementService service;
+    private final MeterRegistry registry;
 
     @Autowired
-    public DeviceController(final MeasurementService service) {
+    public DeviceController(final MeasurementService service, MeterRegistry registry
+    ) {
         this.service = service;
+        this.registry = registry;
     }
-
-    SimpleMeterRegistry registry = new SimpleMeterRegistry();
-    Counter publishMeasurementsCounter = Counter.builder("publishMeasurements.counter"). tag("method", "publishMeasurements").register(registry);
-    Counter retrieveMeasurementsCounter = Counter.builder("retrieveMeasurements.counter"). tag("method", "retrieveMeasurements").register(registry);
-    @Override
+   @Override
     public ResponseEntity<Measurement> publishMeasurements(final String deviceId, final Measurement measurement) {
-        Counter counter = Counter.builder("publishMeasurements.counter"). tag("method", "publishMeasurements").register(registry);
+        registry.counter("publishMeasurements", "method", "invocation").increment();
         LOGGER.info("Publishing measurement for device '{}'", deviceId);
         final MeasurementDO measurementDO = fromMeasurement(deviceId, measurement);
         service.saveMeasurement(measurementDO);
-        publishMeasurementsCounter.increment();
         return ResponseEntity.ok(measurement);
     }
     @Override
     public ResponseEntity<Measurements> retrieveMeasurements(final String deviceId) {
-
+        registry.counter("retrieveMeasurements", "method", "invocation").increment();
         LOGGER.info("Retrieving all measurements for device '{}'", deviceId);
         final List<Measurement> measurements = service.getMeasurements()
                 .stream()
@@ -56,7 +54,7 @@ class DeviceController implements DeviceIdApi {
         LOGGER.info("Size of retrived measurments'{}'" ,measurements.size());
 
 
-        retrieveMeasurementsCounter.increment();
+
         return ResponseEntity.ok(measurementsResult);
     }
 
